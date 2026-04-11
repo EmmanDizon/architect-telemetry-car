@@ -76,6 +76,11 @@ A company that manufactures autonomous systems for vehicles needs a new computer
 - Scales automatically based on incoming data volume
 - Supports near real-time processing without managing servers
 - Cost efficient for event-driven workloads
+- 
+### Why Azure Functions instead of App Service or VMs
+Azure Functions fit this use case better because the system only needs to process events when telemetry arrives. 
+App Service or VMs would require a continuously running consumer service, which adds more infrastructure and operational management. 
+Since the processing is short-lived and event-based, Azure Functions provide a simpler and more cost-efficient solution.
 
 ### Cosmos DB
 - Stores telemetry data in the operational database
