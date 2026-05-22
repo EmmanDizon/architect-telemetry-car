@@ -56,64 +56,85 @@ A company that manufactures autonomous systems for vehicles needs a new computer
 
 ---
 
-![Telemetry Architecture](telemetry.png)
+<img width="3172" height="1460" alt="Blank diagram (2)" src="https://github.com/user-attachments/assets/b68f4f69-d799-4764-843f-b8e5cb4848f7" />
+
 
 ## Architecture Reasoning
 
-### Load Balancer + VM Scale Sets
-- Handle incoming telemetry traffic from vehicles
-- Distributes requests evenly across multiple servers
-- Allows horizontal scaling as the number of cars increases from 10K to 200K+
+### AWS IoT Core
+- Receives telemetry data from vehicles using MQTT
+- Designed for continuous IoT device communication
+- Handles large numbers of connected vehicles
 
-### Event Hubs
-- Acts as the ingestion layer for high-throughput telemetry data
-- Can handle thousands of messages per second (meets 7K messages/sec requirement)
-- Decouples data producers (cars) from downstream processing
-- Buffers incoming messages to prevent data loss during traffic spikes
+### Why AWS IoT Core instead of normal HTTP APIs
+- HTTP creates more overhead for frequent telemetry updates
+- Continuous HTTP calls from thousands of vehicles can increase latency and server load
+- MQTT is lighter and better for frequent small messages from IoT devices
 
-### Azure Functions (Telemetry Processor)
-- Processes incoming telemetry events from Event Hubs
-- Scales automatically based on incoming data volume
-- Supports near real-time processing without managing servers
-- Cost efficient for event-driven workloads
-- 
-### Why Azure Functions instead of App Service or VMs
-Azure Functions fit this use case better because the system only needs to process events when telemetry arrives. 
-App Service or VMs would require a continuously running consumer service, which adds more infrastructure and operational management. 
-Since the processing is short-lived and event-based, Azure Functions provide a simpler and more cost-efficient solution.
+### Kinesis Data Stream
+- Buffers and streams telemetry data
+- Handles high message throughput
+- Prevents traffic spikes from overwhelming the system
 
-### Cosmos DB
-- Stores telemetry data in the operational database
-- Supports schema-less data (matches requirement for varying message structures)
-- High write throughput for handling 7K messages/sec
-- Horizontal scaling for large volumes of incoming data
-- Designed for real-time queries and low-latency reads
+### AWS Lambda - Telemetry Processor
+- Processes telemetry events in near real time
+- Scales automatically based on incoming traffic
+- Writes recent data to DynamoDB and historical data to S3
 
-### Azure Storage (Data Retention)
-- Used for long-term storage of older telemetry data
-- Helps reduce load on the operational database
-- Controls storage costs by moving cold data to cheaper storage tiers
-- Supports data retention strategy to keep operational DB under 4TB limit
+### Why AWS Lambda instead of EC2
+- Telemetry processing is event-driven
+- Lambda runs only when data arrives
+- EC2 needs always-running servers and more manual management
 
-### App Services (Telemetry Viewer)
-- Displays telemetry dashboards for data analysts
-- Provides a simple and scalable way to expose data to users
-- Handles small number of users efficiently
+### Amazon DynamoDB
+- Stores recent operational telemetry data
+- Supports flexible/schema-less records
+- Provides fast reads and writes for monitoring dashboards
 
-### Data Warehouse
-- Used for aggregated and analytical queries
-- Separates reporting workloads from operational systems
-- Improves performance for complex analytics
-- Optimized for read-heavy analytical workloads
+### Why DynamoDB instead of SQL
+- Telemetry messages can have different structures
+- DynamoDB handles high write throughput well
+- SQL is better for relational data, but telemetry mainly needs fast writes and recent lookups
 
-### ETL Process
-- Moves and transforms data from operational storage to the data warehouse
-- Ensures data is structured and optimized for reporting and analysis
-- Aggregates data for better query performance
-- Supports data retention by moving old data out of operational store
+### Admin Monitoring / Data Visualization
+- Displays summarized telemetry data for admin users
+- Uses recent operational data from DynamoDB
+- Good for current vehicle status, recent activity, and active alerts
+
+### Dashboard API
+- Serves telemetry data to the admin dashboard
+- Handles filtering and request processing
+- Prevents direct frontend access to DynamoDB
+
+### Dashboard UI
+- Provides a simple web dashboard for admins
+- Shows telemetry summaries and vehicle monitoring data
+- Focused on viewing and monitoring, not deep analysis
+
+### Amazon S3 Data Lake
+- Stores historical telemetry data
+- Cheaper storage for long-term retention
+- Used as the source for analytics and reporting
 
 ### Data Retention Strategy
-- Controls database growth to stay within 4TB operational limit
+- Keeps only recent data in DynamoDB
+- Moves older data to S3 for long-term storage
+- Prevents the operational database from growing too large
+
+### Amazon Athena
+- Runs SQL queries on telemetry data stored in S3
+- Used for historical analysis and reporting
+- Avoids loading all historical data into DynamoDB
+
+### Amazon QuickSight
+- Creates BI dashboards and reports
+- Visualizes historical telemetry trends
+- Used by analysts for insights and reporting
+
+### Data Analysis / Reporting
+- Uses historical telemetry stored in the S3 data lake
+- Athena queries the historical data
+- QuickSight visualizes trends, reports, and long-term insights
 - Keeps only recent data in the operational store (e.g., last 30 days)
 - Archives older data to Azure Storage for long-term use
 - Improves query performance by limiting active dataset size
