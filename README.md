@@ -141,3 +141,6 @@ A company that manufactures autonomous systems for vehicles needs a new computer
 - Archives older data to Azure Storage for long-term use
 - Improves query performance by limiting active dataset size
 - Reduces operational costs by using appropriate storage tiers
+
+## Current setup VS Redshift
+Redshift is more suitable for heavy enterprise analytics workloads that require very fast BI queries, complex joins, high concurrency, and warehouse-level performance. For this telemetry system, the current S3 + Athena + QuickSight setup is already sufficient because it provides a simpler and more cost-effective approach for storing and analyzing large volumes of historical telemetry data
