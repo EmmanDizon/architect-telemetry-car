@@ -56,7 +56,7 @@ A company that manufactures autonomous systems for vehicles needs a new computer
 
 ---
 
-<img width="3172" height="1460" alt="Blank diagram (2)" src="https://github.com/user-attachments/assets/b68f4f69-d799-4764-843f-b8e5cb4848f7" />
+<img width="3172" height="1460" alt="Telemetry" src="https://github.com/user-attachments/assets/7fb73552-99d7-49b3-ac26-a92fedf7d463" />
 <img width="4843" height="1738" alt="mermaid-diagram (1)" src="https://github.com/user-attachments/assets/ef9a15ef-6309-42f0-a282-430f5474713f" />
 
 
